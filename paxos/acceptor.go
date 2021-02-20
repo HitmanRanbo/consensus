@@ -5,7 +5,10 @@ import (
 	"time"
 )
 
-func NewAcceptor(client Client, learners ...Learner) *Acceptor {
+func NewAcceptor(client Client, learners ...*Learner) *Acceptor {
+	for _, learner := range learners {
+		learner.AddLearnFrom()
+	}
 	return &Acceptor{client: client, learners: learners}
 }
 
@@ -13,7 +16,7 @@ type Acceptor struct {
 	client           Client
 	acceptedProposal Proposal
 	n                int
-	learners         []Learner
+	learners         []*Learner
 }
 
 func (a *Acceptor) Run() {

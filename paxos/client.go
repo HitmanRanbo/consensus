@@ -29,7 +29,7 @@ type EagerNetwork struct {
 func (en *EagerNetwork) NewClient(clientId int) *EagerClient {
 	en.Lock()
 	defer en.Unlock()
-	en.recvQueue[clientId] = make(chan Message)
+	en.recvQueue[clientId] = make(chan Message, 3)
 	return &EagerClient{clientId, en}
 }
 

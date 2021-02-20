@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-func NewProposer(client Client, acceptors ...Acceptor) *Proposer {
+func NewProposer(client Client, acceptors ...*Acceptor) *Proposer {
 	return &Proposer{client: client, acceptors: acceptors}
 }
 
 type Proposer struct {
 	client    Client
 	lasMsgSeq int
-	acceptors []Acceptor
+	acceptors []*Acceptor
 	proposal  Proposal
 }
 
@@ -27,6 +27,7 @@ func (p *Proposer) Run(value string) {
 			log.Printf("proposer: %d failed to recive msg. err is %s", p.client.GetId(), err.Error())
 			continue
 		}
+		log.Printf("proposer: %d get request from %d with propsal: %v. request type is: %d", p.client.GetId(), msg.GetFrom(), msg.GetProposal(), msg.GetType())
 
 		switch msg.GetType() {
 		case Promise:
@@ -34,7 +35,9 @@ func (p *Proposer) Run(value string) {
 			if msg.GetProposal() != (Proposal{}) {
 				p.proposal.value = msg.GetProposal().value
 			}
+			log.Printf("proposer: %d get promise count: %d", p.client.GetId(), promiseCnt)
 			if p.reachMajority(promiseCnt) {
+				log.Printf("proposer: %d get the majority promise. ready to send promise", p.client.GetId())
 				p.broadcast(Propose)
 			}
 		default:
@@ -44,7 +47,7 @@ func (p *Proposer) Run(value string) {
 }
 
 func (p *Proposer) reachMajority(i int) bool {
-	return i > len(p.acceptors)/2+1
+	return i >= len(p.acceptors)/2+1
 }
 
 func (p *Proposer) newProposal(value string)  {
