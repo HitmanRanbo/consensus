@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-func NewProposer(client Client) *Proposer {
-	return &Proposer{client: client}
+func NewProposer(client Client, acceptors ...Acceptor) *Proposer {
+	return &Proposer{client: client, acceptors: acceptors}
 }
 
 type Proposer struct {
@@ -35,10 +35,10 @@ func (p *Proposer) Run(value string) {
 				p.proposal.value = msg.GetProposal().value
 			}
 			if p.reachMajority(promiseCnt) {
-				p.broadcast(Accept)
+				p.broadcast(Propose)
 			}
 		default:
-			log.Panicf("acceptor: %d unexpected message type: %v", a.client.GetId(), msg.typ)
+			log.Panicf("proposer: %d unexpected message type: %v", p.client.GetId(), msg.typ)
 		}
 	}
 }
@@ -54,9 +54,12 @@ func (p *Proposer) newProposal(value string)  {
 
 func (p *Proposer) broadcast(typ MessageType) {
 	for _, acceptor := range p.acceptors {
+		log.Printf("proposer: %d send request to %d with propsal: %v. request type is: %d", p.client.GetId(), acceptor.GetClientId(), p.proposal, typ)
 		err := p.client.Send(NewMessage(p.client.GetId(), acceptor.GetClientId(), p.proposal.GetId(), typ, p.proposal))
 		if err != nil {
 			log.Fatal(err)
 		}
+		// just for test
+		time.Sleep(time.Millisecond)
 	}
 }

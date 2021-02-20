@@ -26,15 +26,16 @@ type EagerNetwork struct {
 	recvQueue map[int]chan Message
 }
 
-func (en *EagerNetwork) Join(clientId int) {
+func (en *EagerNetwork) NewClient(clientId int) *EagerClient {
 	en.Lock()
 	defer en.Unlock()
 	en.recvQueue[clientId] = make(chan Message)
+	return &EagerClient{clientId, en}
 }
 
 type EagerClient struct {
 	clientId int
-	EagerNetwork
+	*EagerNetwork
 }
 
 func (client *EagerClient) GetId() int {
